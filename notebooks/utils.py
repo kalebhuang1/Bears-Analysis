@@ -15,3 +15,13 @@ def promote_first_row_to_header(df):
             df.columns = first_row
             df = df.reset_index(drop=True)
     return df
+
+
+def clean_nfl_string(text, sep='-', keep_left=True):
+    if not isinstance(text, str):
+        return None
+    parts = text.split(sep)
+    if len(parts) < 2:
+        return text
+    result = parts[0] if keep_left else parts[1]
+    return result.strip()

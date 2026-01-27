@@ -9,14 +9,6 @@ import matplotlib.patches as patches
 from PIL import Image
 from utils import *
 
-def clean_nfl_string(text, sep='-', keep_left=True):
-    if not isinstance(text, str):
-        return None
-    parts = text.split(sep)
-    if len(parts) < 2:
-        return text
-    result = parts[0] if keep_left else parts[1]
-    return result.strip()
 
 def cleaned_data():
     p = Path(__file__).resolve()
@@ -117,7 +109,7 @@ def create_qb_scatter(df):
         
         if logo_file.exists():
             img = Image.open(logo_file).convert("RGBA")
-            imagebox = OffsetImage(img, zoom=0.007) 
+            imagebox = OffsetImage(img, zoom=0.0085) 
             ab = AnnotationBbox(imagebox, (current_x, current_y), 
                                frameon=False, zorder=z_val)
             ax.add_artist(ab)

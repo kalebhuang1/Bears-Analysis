@@ -10,7 +10,7 @@ from PIL import Image
 from utils import *
 
 
-def cleaned_data_negative():
+def cleaned_data_blitz():
     p = Path(__file__).resolve()
     base = None
     for parent in p.parents:
@@ -24,8 +24,7 @@ def cleaned_data_negative():
     try:
       
         df_passing = pd.read_csv(raw / "passing_data.csv")
-        df_adv_passing = pd.read_csv(raw / "adv_passing.csv")
-        qb_stats_sumer = pd.read_csv(raw / "qb_stats_sumer.csv")
+        df_blitz_data = pd.read_csv(raw / "qb_blitz_data.csv")
 
     except FileNotFoundError as e:
         print("Data file not found:", e)
@@ -47,25 +46,24 @@ def cleaned_data_negative():
     df_passing['Att'] = df_passing['Att'].str.replace(r'*', '', regex=False)
     df_passing['Att'] = pd.to_numeric(df_passing['Att'], errors='coerce').fillna(0).astype(int)
 
-    qb_stats_sumer = qb_stats_sumer.rename(columns = {'Player Name': 'Player'})
-    qb_stats_sumer['Player'] = qb_stats_sumer['Player'].str.replace(r'^\d+\.\s*', '', regex=True).str.strip()
-    qb_stats_sumer = qb_stats_sumer.rename({'Cameron Ward': 'Cam Ward'})
 
-    df_adv_passing= promote_first_row_to_header(df_adv_passing)
-    df_adv_passing = df_adv_passing[df_adv_passing['Team'] != '2TM']
-    df_final_negative = df_passing[['Player', 'Team', 'Att']].merge(df_adv_passing[['Player', 'Bad%']], on='Player', how='left')
-    df_final_negative = qb_stats_sumer[['Player', 'Time To Throw']].merge(df_final_negative, on='Player', how='left')
-    df_final_negative = df_final_negative[df_final_negative['Att'] >= 200]
-    df_final_negative['Time To Throw'] = pd.to_numeric(df_final_negative['Time To Throw'], errors='coerce').astype(float)
-    df_final_negative['Bad%'] = pd.to_numeric(df_final_negative['Bad%'], errors='coerce').astype(float)
-    df_final_negative = df_final_negative.drop_duplicates(subset=['Player'])
-    print(df_final_negative)
 
-    return df_final_negative
+    df_blitz_data = df_blitz_data.rename(columns = {'Player Name': 'Player'})
+    df_blitz_data['Player'] = df_blitz_data['Player'].str.replace(r'^\d+\.\s*', '', regex=True).str.strip()
+    df_blitz_data = df_blitz_data[['Player', 'Sack %', 'ADoT']]
+    
+    df_final_blitz = df_blitz_data.merge(df_passing[['Player', 'Team', 'Att']], on='Player', how='left')
+    df_final_blitz['Sack %'] = df_final_blitz['Sack %'].str.replace(r'%', '', regex=False)
+    df_final_blitz['Sack %'] = pd.to_numeric(df_final_blitz['Sack %'], errors='coerce').astype(float)
+    df_final_blitz['ADoT'] = pd.to_numeric(df_final_blitz['ADoT'], errors='coerce').astype(float)
+    df_final_blitz = df_final_blitz[df_final_blitz['Att'] >= 200]
+    print(df_final_blitz)
+    
+    return df_final_blitz
 
-def create_scatter_negative(df):
-    x = df['Time To Throw']
-    y = df['Bad%']
+def create_scatter_blitz(df):
+    x = df['ADoT']
+    y = df['Sack %']
     
     x_mean = x.mean()
     y_mean = y.mean()
@@ -79,8 +77,8 @@ def create_scatter_negative(df):
     logo_path = Path(__file__).resolve().parent.parent / "data" / "raw" / "nfl logos"
     
     for idx, row in df.iterrows():
-        current_x = row['Time To Throw']
-        current_y = row['Bad%']
+        current_x = row['ADoT']
+        current_y = row['Sack %']
         
         logo_file = logo_path / f"{row['Team']}.png"
         
@@ -98,29 +96,29 @@ def create_scatter_negative(df):
                        fontsize=6, fontfamily='Times New Roman', fontweight='semibold', alpha=0.9,
                        xytext=(0, 10), textcoords='offset points', 
                        ha='center', zorder=z_val + 1)
-
-    ax.set_xlabel('Time To Throw (Seconds)', fontfamily='Times New Roman')
-    ax.set_ylabel('Bad%', fontfamily='Times New Roman')
-    ax.set_title('NFL QBs: Standard (Min 200 Att)', fontsize=14, pad=20, fontfamily='Times New Roman')
-
+    
+    ax.set_xlabel('ADoT (Average Depth of Target)', fontfamily='Times New Roman')
+    ax.set_ylabel('Sack %', fontfamily='Times New Roman')
+    ax.set_title('NFL QBs: When Blitzed (Min 200 Att)', fontsize=14, pad=20, fontfamily='Times New Roman')
+    
     ax.axhline(y=y_mean, color='black', linestyle=':', linewidth=1, alpha=0.5, zorder=1)
     ax.axvline(x=x_mean, color='black', linestyle=':', linewidth=1, alpha=0.5, zorder=1)
     
     left, right = ax.get_xlim()
     bottom, top = ax.get_ylim()
 
-    bad_rect = patches.Rectangle((x_mean, y_mean), right-x_mean, top - y_mean, 
+    bad_rect = patches.Rectangle((left, y_mean), x_mean - left, top - y_mean, 
                                linewidth=0, facecolor='red', alpha=0.08, zorder=0)
     ax.add_patch(bad_rect)
 
-    good_rect = patches.Rectangle((left, bottom),   x_mean - left, y_mean - bottom, 
+    good_rect = patches.Rectangle((x_mean, bottom), right - x_mean, y_mean - bottom, 
                                linewidth=0, facecolor='green', alpha=0.08, zorder=0)
     ax.add_patch(good_rect)
 
     plt.tight_layout()
-    plt.savefig("caleb_negative_stats.png", dpi=300, bbox_inches='tight')
+    plt.savefig("caleb_blitz_stats.png", dpi=300, bbox_inches='tight')
     plt.show()
 
 if __name__ == "__main__":
-    df = cleaned_data_negative()
-    create_scatter_negative(df)
+    df = cleaned_data_blitz()
+    create_scatter_blitz(df)
