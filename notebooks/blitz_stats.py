@@ -86,24 +86,47 @@ def create_scatter_blitz(df):
         
         if logo_file.exists():
             img = Image.open(logo_file).convert("RGBA")
-            imagebox = OffsetImage(img, zoom=0.0085) 
+            imagebox = OffsetImage(img, zoom=0.009) 
             ab = AnnotationBbox(imagebox, (current_x, current_y), 
                                frameon=False, zorder=z_val)
             ax.add_artist(ab)
             
         if row['dist'] > 0.04: 
             ax.annotate(row['Player'], (current_x, current_y), 
-                       fontsize=6, fontfamily='Times New Roman', fontweight='semibold', alpha=0.9,
+                       fontsize=6.5, fontfamily='Times New Roman', fontweight='semibold', alpha=0.9,
                        xytext=(0, 10), textcoords='offset points', 
                        ha='center', zorder=z_val + 1)
     
-    ax.set_xlabel('ADoT (Average Depth of Target)', fontfamily='Times New Roman')
-    ax.set_ylabel('Sack %', fontfamily='Times New Roman')
-    ax.set_title('NFL QBs: When Blitzed (Min 200 Att)', fontsize=14, pad=20, fontfamily='Times New Roman')
+    ax.set_xlabel('ADoT (Average Depth of Target)', fontsize = 16, fontfamily='Times New Roman')
+    ax.set_ylabel('Sack %', fontsize = 16, fontfamily='Times New Roman')
+    ax.set_title('NFL QBs: When Blitzed (Min 200 Att)', fontsize=20, fontweight = 'semibold', alpha = 0.7, pad=20, fontfamily='Times New Roman')
     
     ax.axhline(y=y_mean, color='black', linestyle=':', linewidth=1, alpha=0.5, zorder=1)
     ax.axvline(x=x_mean, color='black', linestyle=':', linewidth=1, alpha=0.5, zorder=1)
     
+    ax.text(
+    x=0+0.003,              
+    y=y_mean+0.12,            
+    s=f'Avg Sack %: {y_mean:.2f}', 
+    color='black',
+    va='center',         
+    ha='left',           
+    fontsize=9,
+    alpha=0.9,
+    transform=ax.get_yaxis_transform() 
+)
+
+    ax.text(
+    x=x_mean + 0.26,            
+    y=0+0.003,             
+    s=f'Avg ADoT: {x_mean:.2f}', 
+    color='black',
+    va='bottom',         
+    ha='center',         
+    fontsize=9,
+    alpha=0.9,
+    transform=ax.get_xaxis_transform()
+)
     left, right = ax.get_xlim()
     bottom, top = ax.get_ylim()
 

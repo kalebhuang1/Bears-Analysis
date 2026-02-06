@@ -85,7 +85,7 @@ def create_qb_scatter(df):
     # --- 2. Setup Averages and Distances ---
     x_mean = x.mean()
     y_mean = y.mean()
-    
+    print(y_mean)
     # Calculate distance from center to identify outliers
     # (Using the x and y variables we just defined)
     df['dist'] = np.sqrt((x - x_mean)**2 + (y - y_mean)**2)
@@ -109,38 +109,56 @@ def create_qb_scatter(df):
         
         if logo_file.exists():
             img = Image.open(logo_file).convert("RGBA")
-            imagebox = OffsetImage(img, zoom=0.0085) 
+            imagebox = OffsetImage(img, zoom=0.009) 
             ab = AnnotationBbox(imagebox, (current_x, current_y), 
                                frameon=False, zorder=z_val)
             ax.add_artist(ab)
             
-        # Selective Annotation (Labeling outliers only)
+    
         if row['dist'] > 0.04: 
             ax.annotate(row['Player'], (current_x, current_y), 
-                       fontsize=6, fontfamily='Times New Roman', fontweight='semibold', alpha=0.9,
+                       fontsize=6.5, fontfamily='Times New Roman', fontweight='semibold', alpha=0.9,
                        xytext=(0, 10), textcoords='offset points', 
                        ha='center', zorder=z_val + 1)
-    
-    # --- 3. Final Styling ---
-    ax.set_xlabel('Success % (Offensive Efficiency)', fontfamily='Times New Roman')
-    ax.set_ylabel('EPA/Play (Individual Efficiency)', fontfamily='Times New Roman')
-    ax.set_title('NFL QBs: Efficiency When Trailing (Min 200 Att)', fontsize=14, pad=20, fontfamily='Times New Roman')
-    
-    # Vertical and Horizontal Mean Lines
+  
+    ax.set_xlabel('Success % (Offensive Efficiency)', fontsize = 16, fontfamily='Times New Roman')
+    ax.set_ylabel('EPA/Play (Individual Efficiency)', fontsize = 16 ,fontfamily='Times New Roman')
+    ax.set_title('NFL QBs: Efficiency When Trailing (Min 200 Att)', fontsize=20, fontweight = 'semibold', alpha = 0.7, pad=20, fontfamily='Times New Roman')
+
     ax.axhline(y=y_mean, color='black', linestyle=':', linewidth=1, alpha=0.5, zorder=1)
     ax.axvline(x=x_mean, color='black', linestyle=':', linewidth=1, alpha=0.5, zorder=1)
+    ax.text(
+    x=0+0.003,              
+    y=y_mean+0.006,            
+    s=f'Avg EPA/Play: {y_mean:.3f}', 
+    color='black',
+    va='center',         
+    ha='left',           
+    fontsize=9,
+    alpha=0.9,
+    transform=ax.get_yaxis_transform() 
+)
+
+    ax.text(
+    x=x_mean + 1.6,            
+    y=0+0.003,             
+    s=f'Avg Success %: {x_mean:.2f}', 
+    color='black',
+    va='bottom',         
+    ha='center',         
+    fontsize=9,
+    alpha=0.9,
+    transform=ax.get_xaxis_transform()
+)
     
     left, right = ax.get_xlim()
     bottom, top = ax.get_ylim()
 
-# 2. Add 'Elite' Region (Top Right)
-# Anchor point is (x_mean, y_mean), then we calculate width/height to the edge
     elite_rect = patches.Rectangle((x_mean, y_mean), right - x_mean, top - y_mean, 
                                linewidth=0, facecolor='green', alpha=0.08, zorder=0)
     ax.add_patch(elite_rect)
 
-# 3. Add 'Struggling' Region (Bottom Left)
-# Anchor point is (left, bottom), width/height goes up to the means
+
     struggle_rect = patches.Rectangle((left, bottom), x_mean - left, y_mean - bottom, 
                                   linewidth=0, facecolor='red', alpha=0.08, zorder=0)
     ax.add_patch(struggle_rect)
